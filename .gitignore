@@ -1,0 +1,47 @@
+# ── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# ── Model weights & training artefacts ───────────────────────────────────────
+*.pt
+*.pth
+*.onnx
+weights/
+runs/
+
+# ── Datasets & generated images ──────────────────────────────────────────────
+dataset/
+test_dataset/
+backgrounds/
+textures/
+assets/
+
+# ── Video / image files (loose test captures at any level) ───────────────────
+*.mp4
+*.avi
+*.mov
+*.png
+*.jpg
+*.jpeg
+*.bmp
+*.tif
+*.tiff
+*.png.tmp
+
+# ── Inference & test output ───────────────────────────────────────────────────
+infer_out/
+test_result/
+
+# ── Reports / office docs ─────────────────────────────────────────────────────
+*.docx
+*.pdf
+
+# ── Editor & virtual-env ──────────────────────────────────────────────────────
+.vscode/
+.idea/
+.venv/
+venv/
+
+# ── Claude internal ───────────────────────────────────────────────────────────
+.claude/

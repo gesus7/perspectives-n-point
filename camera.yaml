@@ -1,0 +1,6 @@
+# Camera calibration parameters (stereo pair, left camera used for PnP)
+K:
+  - [2828.3, 0.0, 960.0]
+  - [0.0, 2828.3, 540.0]
+  - [0.0, 0.0, 1.0]
+dist: [0.0, 0.0, 0.0, 0.0, 0.0]  # k1, k2, p1, p2, k3

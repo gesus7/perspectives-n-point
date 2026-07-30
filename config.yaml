@@ -1,0 +1,55 @@
+camera:
+  path: camera.yaml
+model:
+  obj: mesh\Base.obj
+  keypoints_3d: keypoints_3d_original.json
+  obj_top: mesh\TowerTop.obj
+  keypoints_3d_top: keypoints_3d_top.json
+  num_keypoints: 12
+  # Two classes share one YOLO-pose head, so both segments use the SAME keypoint
+  # count (12). Physical points differ per class (see the two keypoints_3d_* files).
+  classes:
+    0: TowerBase   # ground-fixed bottom segment
+    1: TowerTop    # top segment, suspended below the helicopter
+  # Keypoints use FIXED physical ids in the labels (no position-based relabeling),
+  # so PnP correspondence is preserved at inference. Symmetric-object ambiguity is
+  # handled at training time by the symmetry-aware pose loss, which auto-discovers
+  # the object's proper-rotation symmetries from keypoints_3d (see utils/symmetry.py
+  # and train/symmetry_loss.py).
+render:
+  num_train: 5000
+  num_val: 500
+  image_size: [1920, 1080]
+  sensor_width_mm: 36.0
+  camera_distance: [20.0, 80.0]
+  scene_weights: [0.25, 0.25, 0.5]   # base_only, top_only, both (weighted toward both)
+  top_camera_distance: [8.0, 20.0]   # camera->top range; top never farther than 20 m
+  top_tilt_jitter_deg: 8.0           # rope-sway tilt of the suspended top segment
+  pitch_deg: [60.0, 90.0]
+  yaw_deg: [0.0, 360.0]
+  roll_jitter_deg: 5.0
+  sun_strength: [2.0, 4.0]
+  hdri_strength: [0.3, 0.8]
+  backgrounds_dir: backgrounds
+  textures_dir: textures
+  ground_size: 200.0
+  occlusion_eps_m: 0.01
+  min_visible_keypoints: 4
+  min_bbox_area_ratio: 0.005
+train:
+  weights: yolo26n-pose.pt
+  epochs: 100
+  imgsz: 1088
+  batch: 16
+  device: 0
+  project: perspectives-n-point
+  name: towerv6
+  warmup_epochs: 5
+  pose: 24.0
+infer:
+  weights: F:\PoseEstimation\perspectives-n-point\weights\20260615-2obj.pt
+  conf_thresh: 0.5
+  det_conf_thresh: 0.25
+  ransac_reproj_err: 4.0
+  ransac_iters: 200
+  axis_len_m: 5.0
