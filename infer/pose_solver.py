@@ -29,12 +29,21 @@ def solve_pose(
     img_pts = kpts_2d[mask].astype(np.float64).reshape(-1, 1, 2)
     orig_idx = np.where(mask)[0]
 
-    ok, rvec, tvec, inliers = cv2.solvePnPRansac(
-        obj_pts, img_pts, K, dist,
-        flags=cv2.SOLVEPNP_SQPNP,
-        reprojectionError=ransac_reproj_err,
-        iterationsCount=ransac_iters,
-    )
+    # SQPnP raises cv2.error (assertion: point_coordinate_variance >=
+    # POINT_VARIANCE_THRESHOLD) when the filtered 3D points are nearly
+    # collinear/coplanar — degenerate geometry that appears frequently
+    # during tracking when only a few low-quality keypoints pass conf_thresh.
+    # Treat it the same as RANSAC returning ok=False.
+    try:
+        ok, rvec, tvec, inliers = cv2.solvePnPRansac(
+            obj_pts, img_pts, K, dist,
+            flags=cv2.SOLVEPNP_SQPNP,
+            reprojectionError=ransac_reproj_err,
+            iterationsCount=ransac_iters,
+        )
+    except cv2.error:
+        return None
+
     if not ok or inliers is None or len(inliers) < 4:
         return None
 

@@ -45,7 +45,8 @@ def run_on_frame(
     for res in yolo_results:
         for det in parse_detections(res, det_conf_thresh, kpts_3d_by_class, class_names):
             r = solve_and_annotate(out_frame, det, K, dist, conf_thresh, axis_len_m,
-                                   slot=len(out_results))
+                                   slot=len(out_results),
+                                   kpts_3d_by_class=kpts_3d_by_class)
             if r is not None:
                 out_results.append(r)
 
@@ -128,6 +129,48 @@ def solve_and_annotate(out_frame, det, K, dist, conf_thresh, axis_len_m, slot=0,
         "class_name": det["class_name"],
         "track_id": det.get("track_id"),
         "box_xyxy": det.get("box_xyxy"),
+    }
+
+
+def annotate_pose(out_frame, R, t, K, dist, kpts_3d, axis_len_m: float = 5.0,
+                  slot: int = 0, class_id: int | None = None,
+                  class_name: str | None = None, track_id: int | None = None,
+                  color: tuple[int, int, int] = (0, 255, 255)) -> dict:
+    """Draw a KNOWN (R, t) pose without re-solving PnP.
+
+    Used to render a predicted pose while YOLO has temporarily lost the target: there
+    are no fresh 2D keypoints, so we reproject the class 3D model with the predicted
+    pose and draw the bbox3d / axes / pose text (reusing the visualize.py primitives).
+    Default `color` is amber to visually distinguish predicted poses from detected ones.
+
+    Returns a result dict shaped like solve_and_annotate's, so callers can treat detected
+    and predicted results uniformly (e.g. for the relative-pose banner).
+    """
+    R = np.asarray(R, dtype=np.float64).reshape(3, 3)
+    t = np.asarray(t, dtype=np.float64).reshape(3)
+
+    rvec, _ = cv2.Rodrigues(R)
+    reproj, _ = cv2.projectPoints(kpts_3d, rvec, t.reshape(3, 1), K, dist)
+    reproj = reproj.reshape(-1, 2)
+    # No detected keypoints to draw; show the reprojected model points instead.
+    fake_conf = np.ones(len(reproj))
+    draw_keypoints(out_frame, reproj, fake_conf, conf_thresh=0.0,
+                   reproj_2d=reproj, color=color)
+    draw_bbox3d(out_frame, R, t, K, dist, kpts_3d)
+    draw_axes(out_frame, R, t, K, dist, axis_len_m)
+    label = class_name if class_name is not None else ""
+    if track_id is not None:
+        label = f"{label}#{track_id}" if label else f"#{track_id}"
+    label = f"{label} [predict]" if label else "[predict]"
+    put_pose_text(out_frame, R, t, label=label, slot=slot)
+
+    return {
+        "R": R,
+        "t": t,
+        "class_id": class_id,
+        "class_name": class_name,
+        "track_id": track_id,
+        "predicted": True,
     }
 
 

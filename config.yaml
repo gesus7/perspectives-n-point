@@ -48,7 +48,7 @@ train:
   pose: 24.0
 infer:
   weights: F:\PoseEstimation\perspectives-n-point\weights\20260615-2obj.pt
-  conf_thresh: 0.5
+  conf_thresh: 0.8
   det_conf_thresh: 0.25
   ransac_reproj_err: 4.0
   ransac_iters: 200

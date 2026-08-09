@@ -28,6 +28,7 @@ def _fake_yolo_result(kpts_2d, kpts_conf, det_conf=0.9, cls=0):
         conf=_t([det_conf]),
         cls=_t([cls]),
         xyxy=_t([[100, 100, 800, 800]]),
+        id=None,   # no track id in predict() mode
     )
     return [SimpleNamespace(keypoints=keypoints, boxes=boxes)]
 
